@@ -26,24 +26,24 @@ class SimpleNeuron:
     
     def __init__(self):
         """Initialize the neuron model."""
-        if HAS_NEURON:
-            # Create soma
+        if HAS_NEURON:            # Create soma
             self.soma = h.Section(name='soma')
             
             # Set geometry
             self.soma.L = 20    # Length in um 
             self.soma.diam = 20 # Diameter in um
             
-            # Insert passive and active conductances
-            self.soma.insert('pas')        # Passive channel
-            self.soma.insert('hh')         # Hodgkin-Huxley channels
+            # Insert mechanisms
+            self.soma.insert('hh')   # Hodgkin-Huxley channels - includes leak and membrane currents
+            
+            # Initialize
+            h.finitialize(-65)  # Initialize at resting potential
             
             # Set parameters
             self.soma.Ra = 100    # Axial resistance in ohm-cm
             self.soma.cm = 1      # Membrane capacitance in uF/cm2
             
-            self.soma.g_pas = 0.0001     # Passive conductance in S/cm2
-            self.soma.e_pas = -65        # Leak reversal potential in mV
+            # HH parameters are at their defaults which should work well
         else:
             # Create mock soma for testing
             self.soma = MockSection('soma')

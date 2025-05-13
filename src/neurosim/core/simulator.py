@@ -43,12 +43,18 @@ class NeuronSimulator:
 
         section_obj = self.cell.get_section(section)
         rec = h.Vector()
+        point = section_obj(0.5)  # Record from the middle of the section
         
-        # Record from the middle of the section (0.5)
+        # Initialize at resting potential to ensure mechanisms are set up
+        h.finitialize(-65)
+        
         if variable == 'v':
-            rec.record(section_obj(0.5)._ref_v)
-        elif variable == 'i':
-            rec.record(section_obj(0.5)._ref_i)
+            rec.record(point._ref_v)
+        elif variable == 'i_membrane':
+            # Record total membrane current using _ref_i
+            rec.record(point._ref_i)
+        else:
+            raise ValueError(f"Unsupported recording variable: {variable}")
             
         self.recordings[f"{section}_{variable}"] = rec
         
@@ -87,8 +93,7 @@ class NeuronSimulator:
             # Generate mock data for testing
             time = np.arange(0, duration, dt)
             mock_v = v_init + np.sin(time/100) * 10  # Simple oscillating voltage
-            
-            results = {
+            return {
                 'time': list(time),
                 'recordings': {
                     name: list(mock_v) for name in self.recordings.keys()
@@ -100,18 +105,19 @@ class NeuronSimulator:
                     'celsius': celsius
                 }
             }
-            return results
             
-        h.celsius = celsius
+        # Set up simulation parameters
         h.dt = dt
+        h.celsius = celsius  
         h.tstop = duration
-        h.v_init = v_init
         
         # Record time
         time = h.Vector()
         time.record(h._ref_t)
         
+        # Initialize and run
         h.finitialize(v_init)
+        h.fcurrent()  # Make sure all membrane currents are initialized
         h.continuerun(duration)
         
         # Collect results
