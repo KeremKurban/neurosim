@@ -35,9 +35,8 @@ async def run_simulation_task(sim_id: str, request: SimulationRequest):
     try:
         # Update simulation status
         simulations[sim_id]["status"] = "running"
-        
-        # Load model
-        simulator.load_model(f"models/{request.model_id}.hoc")
+          # Load model
+        simulator.load_model(request.model_id)
         
         # Setup recordings
         for rec in request.recordings:
