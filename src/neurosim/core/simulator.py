@@ -16,11 +16,11 @@ class NeuronSimulator:
     
     def __init__(self):
         """Initialize NEURON simulator."""
+        self._mock_mode = not HAS_NEURON
         if HAS_NEURON:
             h.load_file('stdrun.hoc')
         self.cell = None
         self.recordings = {}
-        self._mock_mode = not HAS_NEURON
         
     def load_model(self, model_path: str) -> None:
         """Load a NEURON model."""
@@ -39,18 +39,20 @@ class NeuronSimulator:
         """Set up recording for a specific section and variable."""
         if self._mock_mode:
             self.recordings[f"{section}_{variable}"] = []
-        else:
-            rec = h.Vector()
-            if variable == 'v':
-                rec.record(getattr(self.cell.get_section(section)._ref_v, variable))
-            elif variable == 'i':
-                rec.record(getattr(self.cell.get_section(section)._ref_i, variable))
-            self.recordings[f"{section}_{variable}"] = rec
+            return
+
+        section_obj = self.cell.get_section(section)
+        rec = h.Vector()
         
-    def setup_stimulus(self, 
-                      section: str,
-                      stim_type: str,
-                      params: Dict) -> None:
+        # Record from the middle of the section (0.5)
+        if variable == 'v':
+            rec.record(section_obj(0.5)._ref_v)
+        elif variable == 'i':
+            rec.record(section_obj(0.5)._ref_i)
+            
+        self.recordings[f"{section}_{variable}"] = rec
+        
+    def setup_stimulus(self, section: str, stim_type: str, params: Dict) -> None:
         """Set up stimulation protocol."""
         if self._mock_mode:
             self.stimulus = {
