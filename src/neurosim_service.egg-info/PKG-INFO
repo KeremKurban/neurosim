@@ -1,0 +1,104 @@
+Metadata-Version: 2.4
+Name: neurosim-service
+Version: 0.1.0
+Summary: A neuron simulation service similar to BlueNaaS
+Author: Your Name
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi>=0.95.0
+Requires-Dist: uvicorn[standard]>=0.21.1
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: neuron>=8.2
+Requires-Dist: numpy>=1.24.0
+Requires-Dist: pandas>=2.0.0
+Requires-Dist: python-multipart
+Requires-Dist: aiofiles
+Provides-Extra: dev
+Requires-Dist: pytest>=7.3.1; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"
+Requires-Dist: httpx>=0.24.0; extra == "dev"
+Requires-Dist: black>=23.3.0; extra == "dev"
+Requires-Dist: isort>=5.12.0; extra == "dev"
+Requires-Dist: mypy>=1.3.0; extra == "dev"
+
+# Neurosim Service
+
+A neuron simulation service that provides REST API endpoints for running neural simulations, similar to BlueNaaS.
+
+## Features
+
+- Single neuron simulations with NEURON simulator
+- REST API for running simulations and retrieving results
+- Support for various stimulus protocols (current clamp, voltage clamp)
+- Customizable simulation parameters
+- Result visualization
+
+## Installation
+
+1. Install NEURON simulator:
+```bash
+pip install neuron
+```
+
+2. Install the package:
+```bash
+pip install -e .
+```
+
+## Usage
+
+Start the server:
+```bash
+python -m neurosim.run
+```
+
+The API will be available at `http://localhost:8000`
+
+## API Endpoints
+
+- `POST /simulations` - Run a new simulation
+- `GET /simulations/{sim_id}` - Get simulation status
+- `GET /simulations/{sim_id}/results` - Get simulation results
+- `GET /models` - List available neuron models
+- `POST /models/upload` - Upload a new neuron model
+
+## Development
+
+1. Install development dependencies:
+```bash
+pip install -e ".[dev]"
+```
+
+2. Run tests:
+```bash
+pytest
+```
+
+## Examples
+
+Run a simulation:
+```bash
+curl -X POST http://localhost:8000/simulations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model_id": "simple_neuron",
+    "stimulus": {
+      "type": "IClamp",
+      "delay": 100,
+      "duration": 500,
+      "amplitude": 0.5
+    },
+    "recordings": [
+      {
+        "section": "soma",
+        "variable": "v"
+      }
+    ],
+    "conditions": {
+      "duration": 1000,
+      "dt": 0.025,
+      "v_init": -65,
+      "celsius": 34
+    }
+  }'
+```
