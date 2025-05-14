@@ -31,7 +31,8 @@ class SimulationRequest(BaseModel):
 class SimulationStatus(BaseModel):
     """Status of a simulation."""
     simulation_id: str
-    status: str = Field(..., description="Status of simulation (queued, running, completed, failed)")
+    status: str = Field(..., description="Status of simulation (queued, running, completed, failed, cancelled)")
+    progress: Optional[float] = Field(0.0, description="Progress percentage (0-100)")
     error: Optional[str] = None
 
 class SimulationResults(BaseModel):

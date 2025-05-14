@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  neurosim:
+    build: .
+    ports:
+      - "8000:8000"
+      - "50051:50051"
+    volumes:
+      - ./data/models:/app/data/models:Z
+      - ./data/results:/app/data/results:Z
+    env_file: .env
+    environment:
+      - MODELS_DIR=/app/data/models
+      - RESULTS_DIR=/app/data/results
+      - NEURON_MODULE_PATH=/app/.venv/lib/python3.11/site-packages/neuron
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - LOG_LEVEL=INFO
+      - MCP_ENABLED=true
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=50051
