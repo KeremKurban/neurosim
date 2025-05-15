@@ -1,5 +1,9 @@
 # Neurosim Service
 
+[![Tests](https://github.com/USERNAME/neurosim-service/actions/workflows/tests.yml/badge.svg)](https://github.com/USERNAME/neurosim-service/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/USERNAME/neurosim-service/branch/main/graph/badge.svg)](https://codecov.io/gh/USERNAME/neurosim-service)
+[![License](https://img.shields.io/github/license/USERNAME/neurosim-service)](https://github.com/USERNAME/neurosim-service/blob/main/LICENSE)
+
 A neuron simulation service that provides REST API endpoints for running neural simulations, similar to BlueNaaS.
 
 ## Features
@@ -94,10 +98,23 @@ pip install -e ".[dev]"
 pip install -e ".[viz]"
 ```
 
-2. Run tests:
+2. Run tests with coverage:
 ```bash
-pytest
+# Run tests with coverage
+pytest --cov=neurosim --cov-report=term-missing --cov-report=html
+
+# View the coverage report in your browser (Windows)
+start coverage_html/index.html
+
+# View the coverage report in your browser (Linux/WSL)
+xdg-open coverage_html/index.html
 ```
+
+The coverage report will show:
+- Line coverage percentage for each module
+- Missing lines that need test coverage
+- Branch coverage statistics
+- An interactive HTML report for detailed analysis
 
 ## Examples
 
