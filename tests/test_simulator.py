@@ -112,9 +112,14 @@ def test_run_simulation():
 def test_cleanup():
     """Test cleanup of simulator objects."""
     sim = NeuronSimulator()
-    sim.cell = SimpleNeuron()
-    sim.setup_recording('soma', 'v')
-    sim.setup_stimulus('soma', 'IClamp', {'delay': 100, 'duration': 500, 'amplitude': 0.5})
+    
+    if sim._mock_mode:
+        sim.recordings['soma_v'] = [0]  # Fake a mock recording
+        sim.stimulus = {'type': 'IClamp', 'params': {}, 'section': 'soma'}
+    else:
+        sim.load_model("simple_neuron")
+        sim.setup_recording('soma', 'v')
+        sim.setup_stimulus('soma', 'IClamp', {'delay': 100, 'duration': 500, 'amplitude': 0.5})
     
     sim.cleanup()
     assert not hasattr(sim, 'stimulus')

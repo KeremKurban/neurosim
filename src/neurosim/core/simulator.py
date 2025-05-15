@@ -1,8 +1,7 @@
 """Core simulation engine using NEURON simulator."""
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional
 import numpy as np
 from pathlib import Path
-import json
 
 try:
     from neuron import h
@@ -11,17 +10,19 @@ except ImportError:
     print("NEURON simulator not available. Running in mock mode.")
     HAS_NEURON = False
 
+
 class NeuronSimulator:
     """NEURON simulator wrapper for single cell simulations."""
-    
+
     def __init__(self):
         """Initialize NEURON simulator."""
         self._mock_mode = not HAS_NEURON
         if HAS_NEURON:
             h.load_file('stdrun.hoc')
         self.cell = None
-        self.recordings = {}
-        
+        self.recordings: Dict[str, 'h.Vector'] = {}
+        self.stimulus = None
+
     def load_model(self, model_path: str) -> None:
         """Load a NEURON model."""
         if model_path == "simple_neuron":
@@ -29,35 +30,41 @@ class NeuronSimulator:
             self.cell = SimpleNeuron()
         else:
             model_path = Path(model_path)
-            if model_path.suffix == '.hoc' and HAS_NEURON:
-                h.load_file(str(model_path))
-            elif model_path.suffix == '.py':
-                # For Python cell models
-                pass
-            
+            if HAS_NEURON:
+                if model_path.suffix == '.hoc':
+                    h.load_file(str(model_path))
+                elif model_path.suffix == '.py':
+                    # Add your logic to import and initialize the Python-based model
+                    raise NotImplementedError("Python model loading not yet implemented.")
+
     def setup_recording(self, section: str, variable: str = 'v') -> None:
         """Set up recording for a specific section and variable."""
+        key = f"{section}_{variable}"
         if self._mock_mode:
-            self.recordings[f"{section}_{variable}"] = []
+            self.recordings[key] = []
             return
 
         section_obj = self.cell.get_section(section)
+        point = section_obj(0.5)
         rec = h.Vector()
-        point = section_obj(0.5)  # Record from the middle of the section
-        
-        # Initialize at resting potential to ensure mechanisms are set up
+
         h.finitialize(-65)
-        
+
         if variable == 'v':
             rec.record(point._ref_v)
         elif variable == 'i_membrane':
-            # Record total membrane current using _ref_i
-            rec.record(point._ref_i)
+            h.cvode.use_fast_imem(1)  # Required for i_membrane_ recording
+            try:
+                rec.record(point._ref_i_membrane_)
+            except AttributeError:
+                raise RuntimeError(
+                    f"Cannot record {variable}: _ref_i_membrane_ not available in section '{section}'"
+                )
         else:
             raise ValueError(f"Unsupported recording variable: {variable}")
-            
-        self.recordings[f"{section}_{variable}"] = rec
-        
+
+        self.recordings[key] = rec
+
     def setup_stimulus(self, section: str, stim_type: str, params: Dict) -> None:
         """Set up stimulation protocol."""
         if self._mock_mode:
@@ -67,32 +74,35 @@ class NeuronSimulator:
                 'section': section
             }
             return
-            
+
         sec = self.cell.get_section(section)
-        
+
         if stim_type == "IClamp":
             stim = h.IClamp(sec(0.5))
-            stim.delay = params.get('delay', 100)  # ms
-            stim.dur = params.get('duration', 500)  # ms
-            stim.amp = params.get('amplitude', 0.1)  # nA
+            stim.delay = params.get('delay', 100)
+            stim.dur = params.get('duration', 500)
+            stim.amp = params.get('amplitude', 0.1)
         elif stim_type == "VClamp":
             stim = h.SEClamp(sec(0.5))
-            stim.rs = params.get('rs', 0.1)  # MΩ
-            stim.dur1 = params.get('duration', 500)  # ms
-            stim.amp1 = params.get('amplitude', -65)  # mV
-            
+            stim.rs = params.get('rs', 0.1)
+            stim.dur1 = params.get('duration', 500)
+            stim.amp1 = params.get('amplitude', -65)
+        else:
+            raise ValueError(f"Unsupported stimulation type: {stim_type}")
+
         self.stimulus = stim
-        
-    def run_simulation(self, 
-                      duration: float = 1000.0,
-                      dt: float = 0.025,
-                      v_init: float = -65.0,
-                      celsius: float = 34.0) -> Dict:
+
+    def run_simulation(
+        self,
+        duration: float = 1000.0,
+        dt: float = 0.025,
+        v_init: float = -65.0,
+        celsius: float = 34.0
+    ) -> Dict:
         """Run simulation and return results."""
         if self._mock_mode:
-            # Generate mock data for testing
             time = np.arange(0, duration, dt)
-            mock_v = v_init + np.sin(time/100) * 10  # Simple oscillating voltage
+            mock_v = v_init + np.sin(time / 100) * 10
             return {
                 'time': list(time),
                 'recordings': {
@@ -105,24 +115,19 @@ class NeuronSimulator:
                     'celsius': celsius
                 }
             }
-            
-        # Set up simulation parameters
+
         h.dt = dt
-        h.celsius = celsius  
+        h.celsius = celsius
         h.tstop = duration
-        
-        # Record time
-        time = h.Vector()
-        time.record(h._ref_t)
-        
-        # Initialize and run
+
+        time_vec = h.Vector().record(h._ref_t)
+
         h.finitialize(v_init)
-        h.fcurrent()  # Make sure all membrane currents are initialized
+        h.fcurrent()
         h.continuerun(duration)
-        
-        # Collect results
-        results = {
-            'time': list(time),
+
+        return {
+            'time': list(time_vec),
             'recordings': {
                 name: list(rec) for name, rec in self.recordings.items()
             },
@@ -133,10 +138,8 @@ class NeuronSimulator:
                 'celsius': celsius
             }
         }
-        
-        return results
-    
-    def cleanup(self):
+
+    def cleanup(self) -> None:
         """Clean up NEURON objects."""
         self.recordings.clear()
         if hasattr(self, 'stimulus'):
