@@ -1,8 +1,8 @@
 # Neurosim Service
 
-[![Tests](https://github.com/USERNAME/neurosim-service/actions/workflows/tests.yml/badge.svg)](https://github.com/USERNAME/neurosim-service/actions/workflows/tests.yml)
-[![codecov](https://codecov.io/gh/USERNAME/neurosim-service/branch/main/graph/badge.svg)](https://codecov.io/gh/USERNAME/neurosim-service)
-[![License](https://img.shields.io/github/license/USERNAME/neurosim-service)](https://github.com/USERNAME/neurosim-service/blob/main/LICENSE)
+[![Tests](https://github.com/KeremKurban/neurosim/actions/workflows/tests.yml/badge.svg)](https://github.com/KeremKurban/neurosim/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/KeremKurban/neurosim/branch/main/graph/badge.svg)](https://codecov.io/gh/KeremKurban/neurosim)
+[![License](https://img.shields.io/github/license/KeremKurban/neurosim)](https://github.com/KeremKurban/neurosim/blob/main/LICENSE)
 
 A neuron simulation service that provides REST API endpoints for running neural simulations, similar to BlueNaaS.
 
