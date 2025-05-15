@@ -12,6 +12,27 @@ A neuron simulation service that provides REST API endpoints for running neural 
 
 ## Installation
 
+### Option 1: Docker (Recommended)
+
+1. Build and run using Docker Compose:
+```bash
+docker-compose up --build -d
+```
+
+The service will be available at `http://localhost:8000`
+
+2. To view logs:
+```bash
+docker-compose logs -f
+```
+
+3. To stop the service:
+```bash
+docker-compose down
+```
+
+### Option 2: Local Installation
+
 1. Install NEURON simulator:
 ```bash
 pip install neuron
@@ -20,6 +41,28 @@ pip install neuron
 2. Install the package:
 ```bash
 pip install -e .
+```
+
+## WSL Guidelines (Windows Users)
+
+If you're using Windows, it's recommended to run the service through WSL (Windows Subsystem for Linux):
+
+1. Enable WSL if not already enabled:
+```powershell
+# Run in PowerShell as Administrator
+wsl --install
+```
+
+2. Install Docker Desktop for Windows with WSL 2 backend:
+   - Download and install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+   - Ensure WSL 2 backend is enabled in Docker Desktop settings
+
+3. Clone and run in WSL:
+```bash
+# In WSL terminal
+git clone <repository-url>
+cd neurosim-service
+docker-compose up --build -d
 ```
 
 ## Usage
