@@ -89,6 +89,11 @@ The API will be available at `http://localhost:8000`
 pip install -e ".[dev]"
 ```
 
+2. For visualization support:
+```bash
+pip install -e ".[viz]"
+```
+
 2. Run tests:
 ```bash
 pytest
