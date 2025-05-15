@@ -3,6 +3,9 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 import uuid
 from typing import Dict
+import csv
+from pathlib import Path
+from fastapi.responses import FileResponse
 
 from neurosim.models.simulation import (
     SimulationRequest,
@@ -130,5 +133,44 @@ async def get_simulation_results(sim_id: str) -> SimulationResults:
         time=results["time"],
         recordings=results["recordings"],
         parameters=results["params"]
+    )
+
+@app.post("/simulations/{sim_id}/save", response_class=FileResponse)
+async def save_simulation_results(sim_id: str) -> FileResponse:
+    """Save simulation results to a CSV file."""
+    if sim_id not in simulations:
+        raise HTTPException(status_code=404, detail="Simulation not found")
+        
+    sim = simulations[sim_id]
+    if sim["status"] != "completed":
+        raise HTTPException(status_code=400, detail=f"Simulation is {sim['status']}")
+        
+    results = sim["results"]
+    
+    # Create output directory if it doesn't exist
+    output_dir = Path("simulation_results")
+    output_dir.mkdir(exist_ok=True)
+    
+    # Create CSV file path
+    output_file = output_dir / f"simulation_{sim_id}.csv"
+    
+    # Write results to CSV
+    with open(output_file, 'w', newline='') as f:
+        writer = csv.writer(f)
+        # Write header
+        header = ['time'] + list(results['recordings'].keys())
+        writer.writerow(header)
+        
+        # Write data rows
+        time = results['time']
+        recordings = results['recordings']
+        for i in range(len(time)):
+            row = [time[i]] + [recordings[var][i] for var in header[1:]]
+            writer.writerow(row)
+    
+    return FileResponse(
+        path=str(output_file),
+        filename=output_file.name,
+        media_type="text/csv"
     )
 

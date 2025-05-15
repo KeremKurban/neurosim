@@ -47,5 +47,4 @@ ENV PATH=/app/.venv/bin:$PATH
 ENV NEURON_HOME=/app/.venv
 
 # Command to run the service
-# CMD ["python", "-m", "uvicorn", "neurosim.api:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 CMD ["uvicorn", "neurosim.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
